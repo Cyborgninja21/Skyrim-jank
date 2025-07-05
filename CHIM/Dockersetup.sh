@@ -179,7 +179,7 @@ DOCKER_RUN_ARGS=(
     -v "/home/${LINUX_USER}/docker_env/skyrimai_tmp:/tmp"
     -v "/home/${LINUX_USER}/docker_env/skyrimai_dwemerhome:/home/dwemer"
     -v "/home/${LINUX_USER}/docker_env/skyrimai_www:/var/www/html"
-    -v "$start_env_path:/etc/start_env"
+   # -v "$start_env_path:/etc/start_env"
     --restart unless-stopped
     skyrimai:latest
     sh -c "sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && \
