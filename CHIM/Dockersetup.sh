@@ -5,7 +5,7 @@
 # Skyrim AI Framework Docker Setup Script (Refactored)
 # ==========================================================
 # This script sets up a Docker environment for the Skyrim AI Framework.
-# It performs the following tasks:
+# It performs the following tasks:f
 # 1. Checks if running as root
 # 2. Imports Docker image if it doesn't exist
 # 3. Sets up necessary directory structures
