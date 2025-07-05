@@ -16,11 +16,13 @@ set -euo pipefail
 
 # --- Configurable variables ---
 LINUX_USER="${LINUX_USER:-$(logname 2>/dev/null || echo $SUDO_USER)}"
+start_env_path="${WSL_TAR_IMAGE_PATH:-/home/${LINUX_USER}/docker_build/start_env.sh}"
 WSL_TAR_IMAGE_PATH="${WSL_TAR_IMAGE_PATH:-/home/${LINUX_USER}/docker_build/DwemerAI4Skyrim3.tar}"
 POSTGRES_UID=107
 POSTGRES_GID=116
 DWEMER_UID=1000
 DWEMER_GID=1000
+
 
 # --- Utility functions ---
 err() { echo "[ERROR] $*" >&2; }
@@ -177,6 +179,7 @@ DOCKER_RUN_ARGS=(
     -v "/home/${LINUX_USER}/docker_env/skyrimai_tmp:/tmp"
     -v "/home/${LINUX_USER}/docker_env/skyrimai_dwemerhome:/home/dwemer"
     -v "/home/${LINUX_USER}/docker_env/skyrimai_www:/var/www/html"
+    -v "$start_env_path:/etc/start_env"
     --restart unless-stopped
     skyrimai:latest
     sh -c "su - dwemer -c '/usr/local/bin/update_gws' && \
