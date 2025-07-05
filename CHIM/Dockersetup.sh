@@ -144,8 +144,20 @@ fi
 
 # Check if container already exists (use docker filter for reliability)
 if sudo docker ps -a --filter name=^/skyrimaiframework$ --format '{{.Names}}' | grep -q '^skyrimaiframework$'; then
-    err "There already exists skyrimaiframework service. If you want to recreate the service, first remove the old one (sudo docker container stop skyrimaiframework && sudo docker container rm skyrimaiframework) and then rerun this script"
-    exit 1
+    info "Found existing skyrimaiframework container"
+    echo -n "Do you want to remove the existing container and recreate it? (y/N): "
+    read -r remove_response
+    if [[ "$remove_response" =~ ^[Yy]$ ]]; then
+        info "Stopping existing container..."
+        sudo docker container stop skyrimaiframework 2>/dev/null || true
+        info "Removing existing container..."
+        sudo docker container rm skyrimaiframework 2>/dev/null || true
+        info "Existing container removed successfully"
+        info "Proceeding with new container creation..."
+    else
+        info "Setup cancelled. Existing container will remain unchanged."
+        exit 0
+    fi
 fi
 
 # Build common docker run args
@@ -164,7 +176,7 @@ DOCKER_RUN_ARGS=(
     -v "/home/${LINUX_USER}/docker_env/skyrimai_www:/var/www/html"
     --restart unless-stopped
     skyrimai:latest
-    sh -c "sed -i '148,158d' /etc/start_env && echo 'tail -f /dev/null' >> /etc/start_env && /etc/start_env"
+    sh -c "sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && echo 'tail -f /dev/null' >> /etc/start_env && /etc/start_env"
 )
 
 # Add NVIDIA options if available

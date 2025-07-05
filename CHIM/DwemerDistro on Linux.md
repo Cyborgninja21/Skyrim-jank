@@ -110,12 +110,20 @@ Execute the following scripts (equivalent to running .bat files from the officia
 /home/dwemer/xtts-api-server/ddistro_install.sh
 ```
 
-wsl -d  DwemerAI4Skyrim3 -u dwemer -- /home/dwemer/minime-t5/ddistro_install.sh
 
 
-wsl -d  DwemerAI4Skyrim3 -u dwemer -- /home/dwemer/remote-faster-whisper/ddistro_install.sh
 
-wsl -d  DwemerAI4Skyrim3 -u dwemer -- /home/dwemer/minime-t5/ddistro_install.sh
+
+
+
+
+
+ /home/dwemer/minime-t5/ddistro_install.sh
+
+
+/home/dwemer/remote-faster-whisper/ddistro_install.sh
+
+/home/dwemer/minime-t5/ddistro_install.sh
 
 
 
@@ -135,7 +143,7 @@ You need to enter your PC's local IP address in the plugin configuration file.
 - Main laptop IP: `192.168.1.51`
 - DwemerDistro laptop IP: `192.168.1.101`
 
-### Sample AIAgent.ini Configuration
+### Sample AIAgent.ini Configurationome/
 
 ```ini
 SERVER=192.168.1.101
