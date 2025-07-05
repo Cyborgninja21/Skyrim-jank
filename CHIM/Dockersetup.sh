@@ -22,24 +22,6 @@ POSTGRES_GID=116
 DWEMER_UID=1000
 DWEMER_GID=1000
 
-# Check for start_env.sh in the same directory as this script
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-START_ENV_SOURCE="${SCRIPT_DIR}/start_env.sh"
-START_ENV_AVAILABLE=""
-
-# Check if start_env.sh exists and set availability flag
-if [[ -f "$START_ENV_SOURCE" ]]; then
-    START_ENV_AVAILABLE="yes"
-    info "Found start_env.sh in script directory: $START_ENV_SOURCE"
-else
-    START_ENV_AVAILABLE="no"
-    info "start_env.sh not found in script directory: $START_ENV_SOURCE"
-fi
-
-
-
-
-
 # --- Utility functions ---
 err() { echo "[ERROR] $*" >&2; }
 info() { echo "[INFO] $*"; }
@@ -196,18 +178,6 @@ DOCKER_RUN_ARGS=(
     -v "/home/${LINUX_USER}/docker_env/skyrimai_dwemerhome:/home/dwemer"
     -v "/home/${LINUX_USER}/docker_env/skyrimai_www:/var/www/html"
     --restart unless-stopped
-)
-
-# Add start_env.sh mount if available
-if [[ "$START_ENV_AVAILABLE" == "yes" ]]; then
-    info "Adding start_env.sh as static mount to container"
-    DOCKER_RUN_ARGS+=(-v "$START_ENV_SOURCE:/etc/start_env")
-else
-    info "start_env.sh not available - container will use default startup script"
-fi
-
-# Add image and command
-DOCKER_RUN_ARGS+=(
     skyrimai:latest
     sh -c "sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && \
         echo 'tail -f /var/log/apache2/error.log /var/log/apache2/access.log' >> /etc/start_env && \
