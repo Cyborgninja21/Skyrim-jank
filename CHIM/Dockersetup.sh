@@ -163,6 +163,9 @@ fi
 # Build common docker run args
 DOCKER_RUN_ARGS=(
     --name=skyrimaiframework
+    --log-driver=json-file
+    --log-opt max-size=10m
+    --log-opt max-file=3
     -p 8081:8081
     -p 8082:8082
     -p 8083:8083
@@ -176,7 +179,9 @@ DOCKER_RUN_ARGS=(
     -v "/home/${LINUX_USER}/docker_env/skyrimai_www:/var/www/html"
     --restart unless-stopped
     skyrimai:latest
-    sh -c "sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && echo 'tail -f /dev/null' >> /etc/start_env && /etc/start_env"
+    sh -c "sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && \
+        echo 'tail -f /var/log/apache2/error.log /var/log/apache2/access.log' >> /etc/start_env && \
+        /etc/start_env"
 )
 
 # Add NVIDIA options if available
@@ -187,3 +192,22 @@ else
     info "Installing docker service without nvidia support"
     sudo docker run -d "${DOCKER_RUN_ARGS[@]}"
 fi
+
+
+
+
+
+
+
+
+# # Discrete log file paths (no duplicates)
+# LOG_FILES=(
+#     "/home/${LINUX_USER}/docker_env/skyrimai_www/var/log/apache2/error.log"
+#     "/home/${LINUX_USER}/docker_env/skyrimai_www/var/log/apache2/other_vhosts_access.log"
+#     "/home/${LINUX_USER}/docker_env/skyrimai_www/var/www/html/HerikaServer/log/debugStream.log"
+#     "/home/${LINUX_USER}/docker_env/skyrimai_www/var/www/html/HerikaServer/log/context_sent_to_llm.log"
+#     "/home/${LINUX_USER}/docker_env/skyrimai_www/var/www/html/HerikaServer/log/output_from_llm.log"
+#     "/home/${LINUX_USER}/docker_env/skyrimai_www/var/www/html/HerikaServer/log/output_to_plugin.log"
+#     "/home/${LINUX_USER}/docker_env/skyrimai_www/var/www/html/HerikaServer/log/minai.log"
+# )
+
