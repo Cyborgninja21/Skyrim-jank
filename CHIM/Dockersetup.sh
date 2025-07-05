@@ -179,8 +179,8 @@ DOCKER_RUN_ARGS=(
     -v "/home/${LINUX_USER}/docker_env/skyrimai_www:/var/www/html"
     --restart unless-stopped
     skyrimai:latest
-    sh -c "sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && \
-        /usr/local/bin/update_gws && \
+    sh -c "su - dwemer -c '/usr/local/bin/update_gws' && \
+        sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && \
         echo 'tail -f /var/log/apache2/error.log /var/log/apache2/access.log' >> /etc/start_env && \
         /etc/start_env"
 )
