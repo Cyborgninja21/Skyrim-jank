@@ -182,8 +182,7 @@ DOCKER_RUN_ARGS=(
     -v "$start_env_path:/etc/start_env"
     --restart unless-stopped
     skyrimai:latest
-    sh -c "su - dwemer -c '/usr/local/bin/update_gws' && \
-        sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && \
+    sh -c "sed -i '/explorer\.exe http:\/\/\$ipaddress:8081\/HerikaServer\/ui\/index\.php &>\/dev\/null&/,\$d' /etc/start_env && \
         echo 'tail -f /var/log/apache2/error.log /var/log/apache2/access.log' >> /etc/start_env && \
         /etc/start_env"
 )
@@ -200,11 +199,6 @@ else
     info "Installing docker service without nvidia support"
     sudo docker run -d "${DOCKER_RUN_ARGS[@]}"
 fi
-
-
-
-
-/usr/local/bin/update_gws
 
 
 
