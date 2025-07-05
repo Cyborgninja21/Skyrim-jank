@@ -15,7 +15,7 @@
 set -euo pipefail
 
 # --- Configurable variables ---
-LINUX_USER="${LINUX_USER:-ctd}"
+LINUX_USER="${LINUX_USER:-$(logname 2>/dev/null || echo $SUDO_USER)}"
 WSL_TAR_IMAGE_PATH="${WSL_TAR_IMAGE_PATH:-/home/${LINUX_USER}/docker_build/DwemerAI4Skyrim3.tar}"
 POSTGRES_UID=107
 POSTGRES_GID=116
@@ -69,6 +69,27 @@ done
 if [[ $(id -u) -ne 0 ]]; then
     err "Run this script as root (sudo $0)"
     exit 1
+fi
+
+# Display current user and ask for confirmation
+info "Detected user: $LINUX_USER"
+info "This script will set up Docker environment for user: $LINUX_USER"
+info "Docker directories will be created in: /home/$LINUX_USER/docker_env/"
+info "Docker build directory: /home/$LINUX_USER/docker_build/"
+echo -n "Do you want to continue with user '$LINUX_USER'? (y/N): "
+read -r response
+if [[ ! "$response" =~ ^[Yy]$ ]]; then
+    info "Setup cancelled by user"
+    exit 0
+fi
+
+# Pre-setup: Ensure docker_build directory exists
+DOCKER_BUILD_DIR="/home/$(whoami)/docker_build"
+if [[ ! -d "$DOCKER_BUILD_DIR" ]]; then
+    info "Creating required directory: $DOCKER_BUILD_DIR"
+    mkdir -p "$DOCKER_BUILD_DIR"
+else
+    info "Docker build directory already exists: $DOCKER_BUILD_DIR"
 fi
 
 # Step 1: Check and create Docker image
