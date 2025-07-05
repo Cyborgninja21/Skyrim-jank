@@ -119,6 +119,33 @@ set_owner "/home/${LINUX_USER}/docker_env/skyrimai_dwemerhome" "$DWEMER_UID" "$D
 setup_dir_from_tar "/home/${LINUX_USER}/docker_env/skyrimai_www" "$WSL_TAR_IMAGE_PATH" ./var/www/html --strip-components=4
 set_owner "/home/${LINUX_USER}/docker_env/skyrimai_www" "$DWEMER_UID" "$DWEMER_GID"
 
+# Copy start_env.sh script to dwemer home directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+START_ENV_SOURCE="${SCRIPT_DIR}/start_env.sh"
+START_ENV_DEST="/home/${LINUX_USER}/docker_env/skyrimai_dwemerhome/start_env.sh"
+
+if [[ -f "$START_ENV_SOURCE" ]]; then
+    info "Copying start_env.sh to dwemer home directory"
+    
+    # Preserve existing permissions if file already exists
+    if [[ -f "$START_ENV_DEST" ]]; then
+        EXISTING_PERMS=$(stat -c "%a" "$START_ENV_DEST" 2>/dev/null || echo "755")
+        cp "$START_ENV_SOURCE" "$START_ENV_DEST"
+        chmod "$EXISTING_PERMS" "$START_ENV_DEST"
+        info "Copied start_env.sh and preserved existing permissions ($EXISTING_PERMS)"
+    else
+        cp "$START_ENV_SOURCE" "$START_ENV_DEST"
+        chmod 755 "$START_ENV_DEST"  # Default executable permissions
+        info "Copied start_env.sh with default permissions (755)"
+    fi
+    
+    # Ensure proper ownership
+    chown "$DWEMER_UID:$DWEMER_GID" "$START_ENV_DEST"
+else
+    err "start_env.sh not found in script directory: $START_ENV_SOURCE"
+    err "Skipping start_env.sh copy operation"
+fi
+
 # Step 3: Create Docker service
 info "Creating docker service 'skyrimaiframework'"
 
