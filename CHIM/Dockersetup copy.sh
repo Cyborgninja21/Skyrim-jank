@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-
+# soruce https://dwemerdynamics.hostwiki.io/en/Linux-Guide
+# https://www.nexusmods.com/skyrimspecialedition/mods/126330?tab=files
 # ==========================================================
 # Skyrim AI Framework Docker Setup Script
 # ==========================================================
