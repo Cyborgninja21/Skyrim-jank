@@ -110,6 +110,18 @@ Execute the following scripts (equivalent to running .bat files from the officia
 /home/dwemer/xtts-api-server/ddistro_install.sh
 ```
 
+wsl -d  DwemerAI4Skyrim3 -u dwemer -- /home/dwemer/minime-t5/ddistro_install.sh
+
+
+wsl -d  DwemerAI4Skyrim3 -u dwemer -- /home/dwemer/remote-faster-whisper/ddistro_install.sh
+
+wsl -d  DwemerAI4Skyrim3 -u dwemer -- /home/dwemer/minime-t5/ddistro_install.sh
+
+
+
+
+
+
 - **Configuration:** Choose default for CPU, or GPU if you installed the NVIDIA version
 
 ## Network Configuration
