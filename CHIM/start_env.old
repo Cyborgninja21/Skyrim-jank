@@ -137,14 +137,3 @@ if [ -z "$L_MELOTTS" ]; then
 fi
 
 explorer.exe http://$ipaddress:8081/HerikaServer/ui/index.php &>/dev/null&
-
-echo "Press Enter to shutdown DwemerDistro"
-read
-
-killall -15 -u dwemer
-
-/etc/init.d/apache2 stop
-/etc/init.d/postgresql stop
-
-echo "DwemerDistro has stopped running"
-
