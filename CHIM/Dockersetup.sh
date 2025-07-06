@@ -53,7 +53,8 @@ LINUX_USER="${LINUX_USER:-$(logname 2>/dev/null || echo $SUDO_USER)}"
 # Can be set to system-wide locations like /opt, /var, or any custom path
 # Examples: /opt/skyrim-ai, /srv/skyrim-framework, /data/applications/skyrim
 # Default falls back to user's home directory if not specified
-DOCKER_BASE_DIR="${DOCKER_BASE_DIR:-/home/${LINUX_USER}/skyrim-ai-docker}"
+#DOCKER_BASE_DIR="${DOCKER_BASE_DIR:-/home/${LINUX_USER}/skyrim-ai-docker}"
+DOCKER_BASE_DIR="${DOCKER_BASE_DIR:-/models/skyrim-ai/skyrim-ai-docker}"
 
 # Docker build directory containing TAR files and build assets
 # This directory holds the Docker image TAR file and any build-time resources
