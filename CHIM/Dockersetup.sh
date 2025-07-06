@@ -338,6 +338,9 @@ DOCKER_RUN_ARGS=(
     # Container identification and management
     --name=skyrimaiframework                    # Unique container name for easy reference
     
+    # Network configuration
+    --network=host                            # Network mode: bridge (default), host, none, or custom network name
+    
     # Logging configuration to prevent log files from growing too large
     --log-driver=json-file                      # Use JSON file logging driver
     --log-opt max-size=10m                      # Limit individual log file size to 10MB
@@ -397,6 +400,13 @@ readonly APACHE_LOG_DIR=\"/var/www/html/HerikaServer/log\"
 readonly APACHE_ERROR_LOG=\"\${APACHE_LOG_DIR}/apache_error.log\"
 readonly DWEMER_HOME=\"/home/dwemer\"
 
+# Service installation script paths
+readonly MINIME_INSTALL_SCRIPT=\"\${DWEMER_HOME}/minime-t5/ddistro_install.sh\"
+readonly MIMIC_INSTALL_SCRIPT=\"\${DWEMER_HOME}/mimic3/ddistro_install.sh\"
+readonly MELOTTS_INSTALL_SCRIPT=\"\${DWEMER_HOME}/MeloTTS/ddistro_install.sh\"
+readonly WHISPER_INSTALL_SCRIPT=\"\${DWEMER_HOME}/remote-faster-whisper/ddistro_install.sh\"
+readonly XTTS_INSTALL_SCRIPT=\"\${DWEMER_HOME}/xtts-api-server/ddistro_install.sh\"
+
 # Color codes for output formatting
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
@@ -440,6 +450,49 @@ display_banner() {
         /usr/local/bin/print_logo
     else
         log_message \"WARN\" \"Logo script not found at /usr/local/bin/print_logo\"
+    fi
+}
+
+#######################################
+# Update DwemerDistro from git repository
+#######################################
+update_dwemer_distro() {
+    log_message \"INFO\" \"Running git operations and update script...\"
+
+    log_message \"INFO\" \"Executing: cd /home/dwemer/dwemerdistro && git fetch origin\"
+    su - dwemer -s /bin/bash -c \"export TERM=xterm; cd /home/dwemer/dwemerdistro && git fetch origin\"
+
+    log_message \"INFO\" \"Executing: git reset --hard origin/main\"
+    su - dwemer -s /bin/bash -c \"export TERM=xterm; cd /home/dwemer/dwemerdistro && git reset --hard origin/main\"
+
+    log_message \"INFO\" \"Executing: chmod +x update.sh\"
+    su - dwemer -s /bin/bash -c \"export TERM=xterm; cd /home/dwemer/dwemerdistro && chmod +x update.sh\"
+
+    log_message \"INFO\" \"Executing: ./update.sh (as root)\"
+    if cd /home/dwemer/dwemerdistro && ./update.sh; then
+        log_message \"SUCCESS\" \"CHIM distro update complete\"
+    else
+        log_message \"ERROR\" \"Failed to update DwemerDistro\"
+        return 1
+    fi
+}
+
+#######################################
+# Update GWS (Game World Server)
+#######################################
+update_gws() {
+    log_message \"INFO\" \"Running GWS update script...\"
+    
+    if [[ -x \"/usr/local/bin/update_gws\" ]]; then
+        log_message \"INFO\" \"Executing: /usr/local/bin/update_gws\"
+        if su dwemer /usr/local/bin/update_gws; then
+            log_message \"SUCCESS\" \"GWS update complete\"
+        else
+            log_message \"ERROR\" \"Failed to update GWS\"
+            return 1
+        fi
+    else
+        log_message \"WARN\" \"GWS update script not found or not executable: /usr/local/bin/update_gws\"
     fi
 }
 
@@ -545,6 +598,51 @@ setup_apache_logging() {
         fi
     else
         log_message \"INFO\" \"Apache error log symlink already exists\"
+    fi
+}
+
+#######################################
+# Install a service with user context
+# Arguments:
+#   \$1 - Service name
+#   \$2 - Installation script path
+#   \$3 - Installation directory (optional)
+#   \$4 - Flag variable name
+#######################################
+install_service() {
+    local service_name=\"\$1\"
+    local install_script=\"\$2\"
+    local install_dir=\"\${3:-}\"
+    local flag_var=\"\$4\"
+    
+    log_message \"INFO\" \"Installing \$service_name\"
+    
+    # Check if installation script exists
+    if [[ -f \"\$install_script\" ]]; then
+        # Change to installation directory if provided
+        if [[ -n \"\$install_dir\" && -d \"\$install_dir\" ]]; then
+            log_message \"INFO\" \"Changing to installation directory: \$install_dir\"
+            cd \"\$install_dir\" || {
+                log_message \"ERROR\" \"Failed to change to installation directory: \$install_dir\"
+                declare -g \"\$flag_var=1\"
+                return 1
+            }
+        fi
+        
+        log_message \"INFO\" \"Executing installation script for \$service_name\"
+        
+        # Execute installation script as dwemer user
+        if su dwemer -c \"\$install_script\"; then
+            log_message \"SUCCESS\" \"\$service_name installed successfully\"
+        else
+            log_message \"ERROR\" \"Failed to install \$service_name\"
+            declare -g \"\$flag_var=1\"
+            return 1
+        fi
+    else
+        log_message \"WARN\" \"Installation script not found for \$service_name: \$install_script\"
+        declare -g \"\$flag_var=1\"
+        return 1
     fi
 }
 
@@ -721,6 +819,12 @@ main() {
     
     # Display banner
     display_banner
+    
+    # Update DwemerDistro from git repository
+    update_dwemer_distro
+    
+    # Update GWS (Game World Server)
+    update_gws
     
     # Clean temporary files
     cleanup_temp_files
