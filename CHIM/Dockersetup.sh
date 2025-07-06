@@ -609,7 +609,7 @@ setup_apache_logging() {
 #   \$3 - Installation directory (optional)
 #   \$4 - Flag variable name
 #######################################
-install_service() {
+install_ai_service() {
     local service_name=\"\$1\"
     local install_script=\"\$2\"
     local install_dir=\"\${3:-}\"
@@ -654,7 +654,7 @@ install_service() {
 #   \$3 - Port number
 #   \$4 - Flag variable name
 #######################################
-start_service() {
+start_ai_service() {
     local service_name=\"\$1\"
     local script_path=\"\$2\"
     local port=\"\$3\"
@@ -688,26 +688,26 @@ start_ai_services() {
     log_message \"INFO\" \"Starting AI and supporting services\"
     
     # Start Minime-T5/TXT2VEC service (Text vectorization)
-    start_service \"Minime-T5/TXT2VEC service\" \\
+    start_ai_service \"Minime-T5/TXT2VEC service\" \\
                   \"\$DWEMER_HOME/minime-t5/start.sh\" \\
                   \"8082\" \\
                   \"L_MINIME\"
     
     # Start Mimic3 TTS (Text-to-Speech)
-    start_service \"Mimic3 TTS\" \\
+    start_ai_service \"Mimic3 TTS\" \\
                   \"\$DWEMER_HOME/mimic3/start.sh\" \\
                   \"59125\" \\
                   \"L_MIMIC\"
     
     # Start MeloTTS (Alternative Text-to-Speech)
-    start_service \"MeloTTS\" \\
+    start_ai_service \"MeloTTS\" \\
                   \"\$DWEMER_HOME/MeloTTS/start.sh\" \\
                   \"8084\" \\
                   \"L_MELOTTS\"
     
     # Start LocalWhisper Server (Speech-to-Text)
     if [[ -f \"\$DWEMER_HOME/remote-faster-whisper/config.yaml\" ]]; then
-        start_service \"LocalWhisper Server\" \\
+        start_ai_service \"LocalWhisper Server\" \\
                       \"\$DWEMER_HOME/remote-faster-whisper/start.sh\" \\
                       \"9876\" \\
                       \"L_WHISPER\"
@@ -717,7 +717,7 @@ start_ai_services() {
     fi
     
     # Start CHIM XTTS server (Advanced Text-to-Speech)
-    start_service \"CHIM XTTS server\" \\
+    start_ai_service \"CHIM XTTS server\" \\
                   \"\$DWEMER_HOME/xtts-api-server/start.sh\" \\
                   \"8020\" \\
                   \"L_XTTSV2\"
