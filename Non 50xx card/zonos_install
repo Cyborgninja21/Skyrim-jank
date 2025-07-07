@@ -1,0 +1,26 @@
+#!/bin/bash
+
+check_error() {
+  if [ $? -ne 0 ]; then
+    echo -e "\e[41mError:\e[0m $1"
+    echo "Press Enter to exit..."
+    read
+    exit 1
+  fi
+}
+
+cd /home/dwemer
+git clone https://github.com/Zyphra/Zonos.git
+cd Zonos
+
+python3 -m venv .
+source ./bin/activate
+./bin/pip install -U uv
+check_error "Failed to install required pip packages."
+deactivate
+
+./bin/uv sync
+check_error "Failed to install required pip packages."
+
+./bin/uv sync --extra compile
+check_error "Failed to install required pip packages."
