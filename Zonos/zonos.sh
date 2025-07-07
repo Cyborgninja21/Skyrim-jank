@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # =============================================================================
@@ -140,6 +139,25 @@ install_system_dependencies() {
     log "INFO" "Updating package list..."
     sudo apt update
     check_error "Failed to update package list"
+    
+    # Install Python3 and pip
+    if ! command_exists python3; then
+        log "INFO" "Installing Python3..."
+        sudo apt install -y python3
+        check_error "Failed to install Python3"
+        log "INFO" "Python3 installed successfully."
+    else
+        log "INFO" "Python3 is already installed."
+    fi
+    
+    if ! command_exists pip3; then
+        log "INFO" "Installing pip for Python3..."
+        sudo apt install -y python3-pip
+        check_error "Failed to install pip"
+        log "INFO" "pip installed successfully."
+    else
+        log "INFO" "pip is already installed."
+    fi
     
     # Install espeak-ng
     if ! command_exists espeak-ng; then
@@ -303,6 +321,27 @@ install_additional_dependencies() {
     log "INFO" "Additional dependencies installed successfully."
 }
 
+# Check if virtual environment exists
+install_additional_packages() {
+    log "INFO" "Installing additional Python packages..."
+
+    # Activate virtual environment
+    source ./bin/activate
+    check_error "Failed to activate virtual environment"
+
+    # Install packages defined in the PACKAGES variable
+    local PACKAGES=(torch torchaudio numpy pandas)
+    for package in "${PACKAGES[@]}"; do
+        ./bin/pip install "$package"
+        check_error "Failed to install $package"
+    done
+
+    # Deactivate virtual environment
+    deactivate
+
+    log "INFO" "Additional Python packages installed successfully."
+}
+
 # =============================================================================
 # MAIN INSTALLATION FUNCTION
 # =============================================================================
@@ -357,6 +396,7 @@ install_zonos() {
     sync_dependencies
     sync_compile_dependencies
     install_additional_dependencies
+    install_additional_packages
     
     log "INFO" "Zonos installation completed successfully!"
 }
@@ -424,6 +464,14 @@ zonos_download_models() {
         exit 1
     fi
     
+    # Create models download directory relative to the install script
+    local models_dir="$INSTALL_DIR/zonos_download_models"
+    if [ ! -d "$models_dir" ]; then
+        log "INFO" "Creating models directory: $models_dir"
+        mkdir -p "$models_dir"
+        check_error "Failed to create models directory"
+    fi
+    
     # Look for download_models.py in common locations
     local download_script=""
     local search_paths=(
@@ -450,19 +498,70 @@ zonos_download_models() {
         exit 1
     fi
     
+    # Create a modified download script that uses our models directory
+    local temp_download_script="$models_dir/download_models_temp.py"
+    log "INFO" "Creating customized download script..."
+    
+    # Copy the original script and modify it to use our models directory
+    cat > "$temp_download_script" << 'EOF'
+#!/usr/bin/env python3
+
+# GPU FIX: Backup check in case bash script doesn't set environment
+import os
+import sys
+
+# Set models cache directory to our custom location
+models_dir = os.path.dirname(os.path.abspath(__file__))
+os.environ['HF_HOME'] = models_dir
+os.environ['HUGGINGFACE_HUB_CACHE'] = os.path.join(models_dir, 'hub')
+os.environ['TRANSFORMERS_CACHE'] = os.path.join(models_dir, 'transformers')
+
+print(f"Models will be downloaded to: {models_dir}")
+
+if 'CUDA_VISIBLE_DEVICES' not in os.environ:
+    print("WARNING: Setting GPU environment from Python")
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+
+import torch
+import torchaudio
+
+# Debug: Confirm GPU selection
+print(f"Model download using: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
+
+from zonos.model import Zonos
+from zonos.conditioning import make_cond_dict
+from zonos.utils import DEFAULT_DEVICE as device
+
+print("Downloading hybrid model...")
+model = Zonos.from_pretrained("Zyphra/Zonos-v0.1-hybrid", device=device, cache_dir=os.path.join(models_dir, 'models'))
+print("Downloading transformer model...")
+model = Zonos.from_pretrained("Zyphra/Zonos-v0.1-transformer", device=device, cache_dir=os.path.join(models_dir, 'models'))
+print("All models downloaded successfully!")
+print(f"Models saved to: {models_dir}")
+EOF
+    
     # Activate virtual environment and run download script
     log "INFO" "Activating virtual environment..."
     source ./bin/activate
     check_error "Failed to activate virtual environment"
     
-    log "INFO" "Running model download script..."
-    python "$download_script"
+    # Ensure we're using the same environment paths
+    export PYTHONPATH="$INSTALL_DIR/$REPO_NAME:${PYTHONPATH:-}"
+    
+    log "INFO" "Running customized model download script..."
+    log "INFO" "Models will be downloaded to: $models_dir"
+    python "$temp_download_script"
     check_error "Failed to download models"
+    
+    # Clean up temporary script
+    rm -f "$temp_download_script"
     
     # Deactivate virtual environment
     deactivate
     
     log "INFO" "Model download completed successfully!"
+    log "INFO" "Models saved to: $models_dir"
 }
 
 # =============================================================================
